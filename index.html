@@ -1,81 +1,60 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Test Invio Mare Pulito</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geolocalizzazione e invio dati</title>
 </head>
 <body>
-    <h1>Test invio dati a Mare Pulito</h1>
-    <form id="reportForm">
-        <label>
-            Latitudine:<br />
-            <input type="text" id="latitude" required />
-        </label><br /><br />
-        <label>
-            Longitudine:<br />
-            <input type="text" id="longitude" required />
-        </label><br /><br />
-        <label>
-            Indirizzo:<br />
-            <input type="text" id="address" required />
-        </label><br /><br />
-        <label>
-            Stato (clean, fair, dirty):<br />
-            <input type="text" id="status" required />
-        </label><br /><br />
-        <label>
-            Email:<br />
-            <input type="email" id="email" required />
-        </label><br /><br />
-        <label>
-            Reporter:<br />
-            <input type="text" id="reporter" required />
-        </label><br /><br />
-        <button type="submit">Invia Report</button>
-    </form>
+  <h1>Invia la tua posizione</h1>
+  <button id="btnGeo">Invia posizione</button>
+  <p id="status"></p>
 
-    <p id="result"></p>
+  <script>
+    const statusEl = document.getElementById('status');
+    const btnGeo = document.getElementById('btnGeo');
 
-    <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbx5T7JmnQmn9nETQTmzdTRuXc_OwmxniIwMTfcgRJLg_Ams3ZlP2yd9gtuO4_AgbrPmdQ/exec'; // Metti qui l'URL della tua web app
+    btnGeo.addEventListener('click', () => {
+      statusEl.textContent = 'Ottenendo posizione…';
 
-        document.getElementById('reportForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+      if (!navigator.geolocation) {
+        statusEl.textContent = 'Geolocalizzazione non supportata dal browser.';
+        return;
+      }
 
-            const data = {
-                latitude: document.getElementById('latitude').value.trim(),
-                longitude: document.getElementById('longitude').value.trim(),
-                address: document.getElementById('address').value.trim(),
-                status: document.getElementById('status').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                reporter: document.getElementById('reporter').value.trim()
-            };
+      navigator.geolocation.getCurrentPosition(success, error);
 
-            try {
-                const response = await fetch(webAppUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+      function success(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        statusEl.textContent = `Posizione ottenuta: lat=${lat.toFixed(5)}, lng=${lng.toFixed(5)}. Inviando…`;
 
-                const result = await response.json();
+        // Sostituisci con l'URL del tuo deployment Google Apps Script
+        const url = "https://script.google.com/macros/s/TUO_DEPLOYMENT_ID/exec";
 
-                if (result.result === 'success') {
-                    document.getElementById('result').textContent = 'Report inviato con successo! 🎉';
-                    document.getElementById('result').style.color = 'green';
-                    e.target.reset();
-                } else {
-                    document.getElementById('result').textContent = 'Errore nell\'invio: ' + (result.error || 'Sconosciuto');
-                    document.getElementById('result').style.color = 'red';
-                }
-            } catch (error) {
-                document.getElementById('result').textContent = 'Errore nella richiesta: ' + error.message;
-                document.getElementById('result').style.color = 'red';
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: lat, lng: lng }),
+        })
+          .then((res) => res.text())
+          .then((text) => {
+            if (text === "OK") {
+              statusEl.textContent = 'Dati inviati correttamente!';
+            } else {
+              statusEl.textContent = 'Risposta inattesa dal server: ' + text;
             }
-        });
-    </script>
+          })
+          .catch((err) => {
+            console.error(err);
+            statusEl.textContent = 'Errore nell\'invio dei dati.';
+          });
+      }
+
+      function error() {
+        statusEl.textContent = 'Impossibile ottenere la posizione.';
+      }
+    });
+  </script>
 </body>
 </html>
