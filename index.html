@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test Invio Mare Pulito</title>
+</head>
+<body>
+    <h1>Test invio dati a Mare Pulito</h1>
+    <form id="reportForm">
+        <label>
+            Latitudine:<br />
+            <input type="text" id="latitude" required />
+        </label><br /><br />
+        <label>
+            Longitudine:<br />
+            <input type="text" id="longitude" required />
+        </label><br /><br />
+        <label>
+            Indirizzo:<br />
+            <input type="text" id="address" required />
+        </label><br /><br />
+        <label>
+            Stato (clean, fair, dirty):<br />
+            <input type="text" id="status" required />
+        </label><br /><br />
+        <label>
+            Email:<br />
+            <input type="email" id="email" required />
+        </label><br /><br />
+        <label>
+            Reporter:<br />
+            <input type="text" id="reporter" required />
+        </label><br /><br />
+        <button type="submit">Invia Report</button>
+    </form>
+
+    <p id="result"></p>
+
+    <script>
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbyeCi0Fn7dY1429MIGVueV1WoeeoQv4ysa9kKXhGAuJIPhe-LLnVNAbCzxHN4rO62q2/exec'; // Metti qui l'URL della tua web app
+
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                latitude: document.getElementById('latitude').value.trim(),
+                longitude: document.getElementById('longitude').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                status: document.getElementById('status').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                reporter: document.getElementById('reporter').value.trim()
+            };
+
+            try {
+                const response = await fetch(webAppUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.result === 'success') {
+                    document.getElementById('result').textContent = 'Report inviato con successo! 🎉';
+                    document.getElementById('result').style.color = 'green';
+                    e.target.reset();
+                } else {
+                    document.getElementById('result').textContent = 'Errore nell\'invio: ' + (result.error || 'Sconosciuto');
+                    document.getElementById('result').style.color = 'red';
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = 'Errore nella richiesta: ' + error.message;
+                document.getElementById('result').style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
